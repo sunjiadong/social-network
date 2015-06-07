@@ -1,4 +1,4 @@
-﻿/* 这是前端需要的度分布图数据JSON格式
+/* 这是前端需要的度分布图数据JSON格式
 无向图，数组中有两个元素
 [
         [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131070],
@@ -60,7 +60,7 @@ var dOption = {
             {
                     type: 'category',
                     boundaryGap: true,
-                    data: [1, 2, 4, 8, 16, 32, 64, 128, 256]
+                    data: []
             }
         ],
         yAxis: [
@@ -72,19 +72,20 @@ var dOption = {
             {
                     name: '度数',
                     type: 'line',
-                    data: [256, 128, 64, 32, 16, 8, 4, 2, 1]
+                    data: []
             },
             {
                     name: '入度',
                     type: 'line',
-                    data: [256+2, 128-2, 64+2, 32-2, 16+2, 8-2, 4+2, 2-2, 1+2]
+                    data: []
             }
         ]
 };
 
 
 // 画度分布图
-function paintDegree(degreeData, status) {
+/*
+function paintDegree(root, status) {
 
         if (status != "success") {
                 ///////////////////////////////////////////////////////
@@ -92,6 +93,7 @@ function paintDegree(degreeData, status) {
                 ///////////////////////////////////////////////////////
                 return console.log(status);
         }
+        */
         // TODO
         // Step:3 conifg ECharts's path, link to echarts.js from current page.
         // Step:3 为模块加载器配置echarts的路径，从当前页面链接到echarts.js，定义所需图表路径
@@ -104,33 +106,49 @@ function paintDegree(degreeData, status) {
         // Step:4 require echarts and use it in the callback.
         // Step:4 动态加载echarts然后在回调函数中开始使用，注意保持按需加载结构定义图表路径
         require(
-            [
-                'echarts',
-                'echarts/chart/line',
-            ],
-            function (ec) {
+        	    [
+        	        'echarts',
+        	        'echarts/chart/bar',
+        	        'echarts/chart/line',
+        	        'echarts/chart/scatter',
+        	        'echarts/chart/force',
+        	        'echarts/chart/chord'
+        	    ],
+        	    eChart    
+        	);
+       function eChart(ec) {
                     //echarts = ec;
                     degree2 = ec.init(document.getElementById('degree2'));
+                    $.get("../json/degree.json", function (root,status){
+                        if (status != "success") {
+                                 // 提示用户没有拿到图
+                                 return console.log(error);
+                         }
                     // 接下来是将后台返回的度分布图数据
                     // 组装成echats支持的格式
 
-                    if (degreeData.length == 3) {//有向图
+                    if (root.directed == true) {//有向图
                             dOption.legend.data[0] = "出度";
                             dOption.legend.data.push("入度");
-
-                            dOption.series[0].data = degreeData[1];
                             dOption.series[0].name = '出度';
-                            dOption.series[1].data = degreeData[2];
+                            for(var i=0;i<root.degrees.length;i++){
+                            dOption.series[0].data[i] = root.numbers0[i].number;
+                            dOption.series[1].data[i] = root.numbers[i].number;
                     }
+                    }
+                    
                     else {//无向图
-
-                            dOption.series[0].data = degreeData[1];
+                    	for(var i=0;i<root.degrees.length;i++){
+                            dOption.series[0].data[i] = root.numbers0[i].number;
+                    	}
                             dOption.series.pop(1);
+                    
                     }
 
-                    dOption.xAxis[0].data = degreeData[0];
+                    for(var i=0;i<root.degrees.length;i++){
+                        dOption.xAxis[0].data[i] = root.degrees[i].degree;
+                    }
                     degree2.setOption(dOption);
-            }//回调函数
-        );
+            });
 
 }
